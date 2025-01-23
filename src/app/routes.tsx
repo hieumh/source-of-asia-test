@@ -3,13 +3,13 @@ import {
   createBrowserRouter,
   createRoutesFromElements,
 } from 'react-router-dom';
+import Home from '../pages/home/Home.component';
 
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route path="/" element={<div></div>}>
-      <Route path="login" element={<div>Login</div>} />
-    </Route>
-  )
-);
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Home />
+  },
+]);
 
 export default router;

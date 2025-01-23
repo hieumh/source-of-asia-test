@@ -1,21 +1,57 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosPromise, AxiosRequestConfig, AxiosRequestHeaders, CancelTokenSource } from 'axios';
 
-const populateConfig = (config: any): AxiosRequestConfig => {
-  const additionalConfig = {};
-
-  return {
-    ...config,
-    additionalConfig,
-  };
+const HTTP_METHODS = {
+  GET: 'GET',
+  POST: 'POST',
+  PUT: 'PUT',
+  PATCH: 'PATCH',
+  DELETE: 'DELETE'
 };
 
+const apiTimeOut = 300000;
+const baseUrl = import.meta.env.VITE_API_URL || '';
+
+export type TFetchOption<T> = Partial<{
+  data: T;
+  headers: AxiosRequestHeaders;
+  timeout: number;
+  method: string;
+  responseType: ResponseType;
+  cancelToken: CancelTokenSource;
+}>;
+
+const fetch = <T>(url: string, {
+  data,
+  headers,
+  timeout,
+  method,
+  responseType,
+  cancelToken
+}: TFetchOption<T>): AxiosPromise => {
+
+  const config: AxiosRequestConfig = {
+    headers,
+    timeout: timeout || apiTimeOut,
+    method,
+    cancelToken: cancelToken?.token
+  };
+
+  if (data) {
+    config.data = data;
+  }
+  const newURL =/^https?:\/\//.test(url) ? url : baseUrl + url;
+  return axios(newURL, config);
+}
+
 export const ApiHelper = {
-  get: (url: string, config: AxiosRequestConfig) =>
-    axios.get(url, populateConfig(config)),
-  post: (url: string, config: AxiosRequestConfig) =>
-    axios.post(url, populateConfig(config)),
-  put: (url: string, config: AxiosRequestConfig) =>
-    axios.put(url, populateConfig(config)),
-  delete: (url: string, config: AxiosRequestConfig) =>
-    axios.delete(url, populateConfig(config)),
+  get: <T>(url: string, options: TFetchOption<T> = {}): AxiosPromise =>
+    fetch<T>(url, { ...options, method: HTTP_METHODS.GET }),
+  post: <T>(url: string, options: TFetchOption<T> = {}): AxiosPromise =>
+    fetch<T>(url, { ...options, method: HTTP_METHODS.POST }),
+  put: <T>(url: string, options: TFetchOption<T> = {}): AxiosPromise =>
+    fetch<T>(url, { ...options, method: HTTP_METHODS.PUT }),
+  patch: <T>(url: string, options: TFetchOption<T> = {}): AxiosPromise =>
+    fetch<T>(url, { ...options, method: HTTP_METHODS.PATCH }),
+  delete: <T>(url: string, options: TFetchOption<T> = {}): AxiosPromise =>
+    fetch<T>(url, { ...options, method: HTTP_METHODS.DELETE })
 };
